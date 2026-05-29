@@ -1,0 +1,112 @@
+// This is your Prisma schema file
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  savedColleges SavedCollege[]
+  reviews       Review[]
+  comparisons   Comparison[]
+}
+
+model College {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  name          String
+  shortName     String
+  city          String
+  state         String
+  image         String
+  logo          String
+  rating        Float    @default(0)
+  reviewsCount  Int      @default(0)
+  feesMin       Int
+  feesMax       Int
+  established   Int
+  type          String   // Government, Private, Deemed
+  ranking       Int
+  accreditation String[] @default([])
+  description   String
+  facilities    String[] @default([])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  placement     Placement?
+  courses       Course[]
+  reviews       Review[]
+  savedBy       SavedCollege[]
+  comparisons   Comparison[]
+}
+
+model Placement {
+  id               String  @id @default(cuid())
+  averagePackage   Int
+  highestPackage   Int
+  placementRate    Int
+  topRecruiters    String[] @default([])
+  collegeId        String  @unique
+  college          College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+model Course {
+  id        String  @id @default(cuid())
+  name      String
+  category  String
+  duration  String
+  fees      Int
+  seats     Int
+  collegeId String
+  college   College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  rating    Float
+  author    String
+  createdAt DateTime @default(now())
+  collegeId String
+  userId    String?
+
+  college   College  @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model SavedCollege {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+  savedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+}
+
+model Comparison {
+  id        String   @id @default(cuid())
+  userId    String
+  collegeId String
+  addedAt   DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, collegeId])
+}
