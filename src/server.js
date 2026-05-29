@@ -14,7 +14,7 @@ const errorHandler = require("./middleware/errorHandler");
 const prisma = require("./config/prisma");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT;
 
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 app.use(
