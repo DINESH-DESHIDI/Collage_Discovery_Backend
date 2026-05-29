@@ -14,15 +14,17 @@ const errorHandler = require("./middleware/errorHandler");
 const prisma = require("./config/prisma");
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 // ─── CORS ──────────────────────────────────────────────────────────────────────
 app.use(
   cors({
     origin: [
-      process.env.CLIENT_URL || "http://localhost:5173",
+      process.env.CLIENT_URL,
+      "http://localhost:5173",
       "http://localhost:3000",
       "http://localhost:5174",
+      "https://collage-discovery-frontend.vercel.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
