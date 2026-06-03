@@ -260,6 +260,13 @@ async function main() {
         established: college.established,
         type: college.type,
         ranking: college.ranking,
+        cutoffRank: Math.max(1200, college.ranking * 800),
+        views: 800 + college.ranking * 120,
+        saves: 120 + college.ranking * 8,
+        comparisons: 30 + college.ranking * 3,
+        discussionCount: 5 + Math.floor(college.ranking / 3),
+        popularityScore: Number(((800 + college.ranking * 120) * 0.4 + (120 + college.ranking * 8) * 0.3 + (30 + college.ranking * 3) * 0.2 + (200 + Math.floor(college.rating * 100)) * 0.1).toFixed(1)),
+        trendingScore: Number(((800 + college.ranking * 120) * 0.4 + (120 + college.ranking * 8) * 0.3 + (30 + college.ranking * 3) * 0.2 + (200 + Math.floor(college.rating * 100)) * 0.1).toFixed(1)),
         accreditation: ["NAAC A++", "NBA", "UGC"],
         description: `${college.name} is a premier ${college.type.toLowerCase()} institution established in ${college.established}, renowned for academic excellence, cutting-edge research, and a vibrant student community.`,
         facilities: [
@@ -291,6 +298,55 @@ async function main() {
 
     console.log(`  📚 Seeded: ${created.name}`);
   }
+
+  const [iitBombay, nitTrichy, bitsPilani] = await Promise.all([
+    prisma.college.findUnique({ where: { slug: "iit-bombay" } }),
+    prisma.college.findUnique({ where: { slug: "nit-trichy" } }),
+    prisma.college.findUnique({ where: { slug: "bits-pilani" } }),
+  ]);
+
+  await prisma.question.createMany({
+    data: [
+      {
+        title: "Which college is best for CSE with strong placements?",
+        body: "I want a top CSE program with at least 90% placement rate and strong average package. Which colleges should I consider?",
+        tags: ["CSE", "placements", "recommendation"],
+        authorName: "Priya Sharma",
+        collegeId: iitBombay?.id,
+      },
+      {
+        title: "Can I get into BITS Pilani with a 18000 rank?",
+        body: "My JEE Main rank is around 18000 and I am from the general category. How realistic is admission for CSE or ECE?",
+        tags: ["JEE Main", "BITS", "cutoff"],
+        authorName: "Rahul Gupta",
+        collegeId: bitsPilani?.id,
+      },
+      {
+        title: "What is the best private engineering college in Tamil Nadu?",
+        body: "Looking for colleges with strong campus life, placements above 85% and fees under ₹4 lakh per year.",
+        tags: ["private", "Tamil Nadu", "engineering"],
+        authorName: "Aisha Khan",
+        collegeId: nitTrichy?.id,
+      },
+    ].filter((entry) => entry.collegeId),
+  });
+
+  await prisma.answer.createMany({
+    data: [
+      {
+        body: "For strong CSE placements, IIT Bombay and IIT Delhi are excellent, closely followed by NIT Trichy. Choose based on your budget and location preference.",
+        authorName: "Aditya Verma",
+        questionId: (await prisma.question.findFirst({ where: { title: { contains: "best for CSE" } } })).id,
+        upvotes: 8,
+      },
+      {
+        body: "A 18000 JEE Main rank gives you a good shot at BITS Pilani for some branches, though CSE may still be very competitive. Consider ECE or EEE for better admission chances.",
+        authorName: "Sneha Reddy",
+        questionId: (await prisma.question.findFirst({ where: { title: { contains: "18000 rank" } } })).id,
+        upvotes: 6,
+      },
+    ],
+  });
 
   console.log("\n✅ Seed completed successfully!");
   console.log(`   → ${collegesData.length} colleges created`);

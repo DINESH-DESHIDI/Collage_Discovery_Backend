@@ -21,35 +21,45 @@ model User {
   savedColleges SavedCollege[]
   reviews       Review[]
   comparisons   Comparison[]
+  questions     Question[]
+  answers       Answer[]
 }
 
 model College {
-  id            String   @id @default(cuid())
-  slug          String   @unique
-  name          String
-  shortName     String
-  city          String
-  state         String
-  image         String
-  logo          String
-  rating        Float    @default(0)
-  reviewsCount  Int      @default(0)
-  feesMin       Int
-  feesMax       Int
-  established   Int
-  type          String   // Government, Private, Deemed
-  ranking       Int
-  accreditation String[] @default([])
-  description   String
-  facilities    String[] @default([])
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  name           String
+  shortName      String
+  city           String
+  state          String
+  image          String
+  logo           String
+  rating         Float    @default(0)
+  reviewsCount   Int      @default(0)
+  feesMin        Int
+  feesMax        Int
+  established    Int
+  type           String   // Government, Private, Deemed
+  ranking        Int
+  cutoffRank     Int?     @default(0)
+  views          Int      @default(0)
+  saves          Int      @default(0)
+  comparisons    Int      @default(0)
+  discussionCount Int     @default(0)
+  popularityScore Float   @default(0)
+  trendingScore  Float    @default(0)
+  accreditation  String[] @default([])
+  description    String
+  facilities     String[] @default([])
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  placement     Placement?
-  courses       Course[]
-  reviews       Review[]
-  savedBy       SavedCollege[]
-  comparisons   Comparison[]
+  placement      Placement?
+  courses        Course[]
+  reviews        Review[]
+  savedBy        SavedCollege[]
+  comparedBy     Comparison[]
+  questions      Question[]
 }
 
 model Placement {
@@ -109,4 +119,42 @@ model Comparison {
   college College @relation(fields: [collegeId], references: [id], onDelete: Cascade)
 
   @@unique([userId, collegeId])
+}
+
+model Question {
+  id         String    @id @default(cuid())
+  title      String
+  body       String
+  tags       String[]  @default([])
+  authorName String
+  authorId   String?
+  collegeId  String?
+  views      Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  answers    Answer[]
+  college    College?  @relation(fields: [collegeId], references: [id], onDelete: SetNull)
+  author     User?     @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  body       String
+  authorName String
+  authorId   String?
+  questionId String
+  upvotes    Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  author   User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  type      String
+  userId    String?
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
 }

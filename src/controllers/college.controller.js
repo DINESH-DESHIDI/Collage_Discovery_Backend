@@ -1,17 +1,12 @@
-// src/controllers/college.controller.js
-// Handles HTTP layer for college listing, detail, search, and comparison
-
 const {
   getColleges,
   getCollegeById,
   getCollegesForComparison,
+  predictColleges,
 } = require("../services/college.service");
 const { sendSuccess, sendError, sendPaginated } = require("../utils/response");
 
-/**
- * GET /api/colleges
- * Query params: page, limit, search, state, type, minRating, minFees, maxFees, sort
- */
+
 const listColleges = async (req, res, next) => {
   try {
     const { colleges, total, page, limit } = await getColleges(req.query);
@@ -21,10 +16,7 @@ const listColleges = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/colleges/search
- * Convenience alias — same logic as listColleges with search param
- */
+
 const searchColleges = async (req, res, next) => {
   try {
     const { colleges, total, page, limit } = await getColleges(req.query);
@@ -34,11 +26,7 @@ const searchColleges = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/colleges/compare
- * Query param: ids — comma-separated college IDs or slugs
- * Example: /api/colleges/compare?ids=iit-bombay,iit-delhi,bits-pilani
- */
+
 const compareColleges = async (req, res, next) => {
   try {
     const { ids } = req.query;
@@ -58,10 +46,7 @@ const compareColleges = async (req, res, next) => {
   }
 };
 
-/**
- * GET /api/colleges/:id
- * :id can be a slug (e.g. "iit-bombay") or a cuid
- */
+
 const getCollege = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -77,4 +62,29 @@ const getCollege = async (req, res, next) => {
   }
 };
 
-module.exports = { listColleges, searchColleges, compareColleges, getCollege };
+const predictCollegesController = async (req, res, next) => {
+  try {
+    const { rank, category, examType } = req.query;
+    if (!rank) {
+      return sendError(res, "Rank parameter is required for prediction.", 400);
+    }
+
+    const results = await predictColleges({
+      rank: Math.max(1, Number(rank) || 1),
+      category: category || "",
+      examType: examType || "EAMCET",
+    });
+
+    return sendSuccess(res, results, "Predictions generated successfully.");
+  } catch (err) {
+    next(err);
+  }
+};
+
+module.exports = {
+  listColleges,
+  searchColleges,
+  compareColleges,
+  getCollege,
+  predictColleges: predictCollegesController,
+};

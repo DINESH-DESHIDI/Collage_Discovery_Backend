@@ -10,6 +10,10 @@ const authRoutes = require("./routes/auth.routes");
 const collegeRoutes = require("./routes/college.routes");
 const savedRoutes = require("./routes/saved.routes");
 const reviewRoutes = require("./routes/review.routes");
+const insightRoutes = require("./routes/insight.routes");
+const discussionRoutes = require("./routes/discussion.routes");
+const analyticsRoutes = require("./routes/analytics.routes");
+const assistantRoutes = require("./routes/assistant.routes");
 const errorHandler = require("./middleware/errorHandler");
 const prisma = require("./config/prisma");
 
@@ -60,6 +64,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/colleges", collegeRoutes);
 app.use("/api/saved", savedRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/insights", insightRoutes);
+app.use("/api/discussions", discussionRoutes);
+app.use("/api/analytics", analyticsRoutes);
+app.use("/api/assistant", assistantRoutes);
 
 // ─── 404 handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {

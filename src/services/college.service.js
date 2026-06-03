@@ -120,4 +120,75 @@ const getCollegesForComparison = async (ids) => {
   return colleges;
 };
 
-module.exports = { getColleges, getCollegeById, getCollegesForComparison };
+/**
+ * Predict colleges based on rank, category, and exam type
+ */
+const predictColleges = async ({ rank, category, examType }) => {
+  const colleges = await prisma.college.findMany({
+    include: {
+      placement: true,
+      courses: true,
+    },
+  });
+
+  const getChanceLabel = (score) => {
+    if (score >= 85) return "High";
+    if (score >= 65) return "Medium";
+    return "Low";
+  };
+
+  const results = colleges.map((college) => {
+    const cutoff = college.cutoffRank || Math.max(1200, college.ranking * 800);
+    const rankDiff = rank - cutoff;
+    let rankFactor = 0;
+    if (rankDiff <= 0) {
+      rankFactor = 100 - Math.min(50, Math.abs(rankDiff) / 100);
+    } else {
+      rankFactor = Math.max(0, 100 - rankDiff / 50);
+    }
+
+    const ratingFactor = (college.rating || 0) * 7;
+    const placementFactor = ((college.placement?.placementRate || 0) / 100) * 30;
+
+    const hasCategoryCourse = category
+      ? college.courses.some((c) => c.category.toLowerCase() === category.toLowerCase())
+      : false;
+
+    const categoryBonus = category ? (hasCategoryCourse ? 12 : 0) : 8;
+    const examBonus = examType === "JEE Advanced" ? 5 : examType === "JEE Main" ? 3 : 0;
+
+    const rawScore = rankFactor + ratingFactor + placementFactor + categoryBonus + examBonus;
+    const score = Math.min(100, Math.max(0, rawScore));
+
+    let expectedBranch = "Top program";
+    if (category && hasCategoryCourse) {
+      const match = college.courses.find((c) => c.category.toLowerCase() === category.toLowerCase());
+      if (match) expectedBranch = match.name;
+    } else if (college.courses && college.courses.length > 0) {
+      expectedBranch = college.courses[0].name;
+    }
+
+    return {
+      id: college.id,
+      slug: college.slug,
+      name: college.name,
+      shortName: college.shortName,
+      city: college.city,
+      state: college.state,
+      logo: college.logo,
+      rating: college.rating,
+      feesMin: college.feesMin,
+      feesMax: college.feesMax,
+      ranking: college.ranking,
+      type: college.type,
+      placement: college.placement,
+      score,
+      chance: getChanceLabel(score),
+      expectedBranch,
+    };
+  });
+
+  return results.sort((a, b) => b.score - a.score);
+};
+
+module.exports = { getColleges, getCollegeById, getCollegesForComparison, predictColleges };

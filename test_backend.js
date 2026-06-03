@@ -169,7 +169,7 @@ async function testSearch() {
   // Search by name
   const iit = await req("GET", "/api/colleges/search?search=iit");
   test("Search 'iit' finds colleges", iit.body?.data?.length >= 2, `count=${iit.body?.data?.length}`);
-  test("Search results contain 'IIT'", iit.body?.data?.every(c => c.name.toLowerCase().includes("iit")));
+  test("Search results contain 'IIT'", iit.body?.data?.every(c => c.name.toLowerCase().includes("iit") || c.shortName.toLowerCase().includes("iit")));
 
   // Search by city
   const delhi = await req("GET", "/api/colleges?search=delhi");
